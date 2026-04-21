@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: agrobalance-backend
+    runtime: node
+    rootDir: .
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm run server
+    envVars:
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_WORKSPACE_ID
+        value: default
+      - key: ALLOWED_ORIGINS
+        sync: false

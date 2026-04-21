@@ -1,0 +1,17 @@
+.env
+backend/.env
+*.local
+firebase-adminsdk-*.json
+agrobalance-app-firebase-adminsdk-*.json
+*.zip
+mobile-preview-*.png
+mobile-mockup.svg
+edge-expenses.html
+dist
+node_modules
+vite.log
+vite.err
+vite-5180.log
+vite-5180.err
+
+.vercel
