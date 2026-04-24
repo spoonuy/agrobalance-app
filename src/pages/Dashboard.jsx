@@ -54,7 +54,7 @@ export default function Dashboard() {
   const campaigns = byCompany('campaigns');
   const fields = byCompany('fields');
   const crops = byCompany('crops');
-  const expenses = byCompany('expenses');
+  const expenses = byCompany('expenses').filter((expense) => !expense.pendingSeedCost);
   const incomes = byCompany('incomes');
   const suppliers = byCompany('suppliers');
   const customers = byCompany('customers');
