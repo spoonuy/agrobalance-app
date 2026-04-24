@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import { seedData } from '../data/seed';
 import { isSharedWorkspaceEnabled, workspaceDocRef, workspaceId } from '../firebase';
+import { useAuth } from './AuthContext';
 import { uid } from '../utils/helpers';
 
 const AppContext = createContext(null);
@@ -126,6 +127,7 @@ const relationChecks = {
 };
 
 export function AppProvider({ children }) {
+  const { authUser, isAuthEnabled } = useAuth();
   const [state, setState] = useState(loadData);
   const lastRemoteSnapshot = useRef(null);
   const remoteReady = useRef(!isSharedWorkspaceEnabled);
@@ -133,6 +135,38 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
+
+  useEffect(() => {
+    if (!isAuthEnabled) return;
+
+    setState((prev) => {
+      const nextUser = authUser
+        ? {
+            id: authUser.uid,
+            nombre: authUser.displayName || authUser.email || 'Usuario',
+            email: authUser.email || '',
+            rol: 'usuario',
+            estado: 'activo'
+          }
+        : null;
+
+      const nextUsers = nextUser
+        ? [...prev.users.filter((item) => item.id !== nextUser.id), nextUser]
+        : prev.users;
+
+      const sameUser =
+        JSON.stringify(prev.currentUser) === JSON.stringify(nextUser) &&
+        JSON.stringify(prev.users) === JSON.stringify(nextUsers);
+
+      return sameUser
+        ? prev
+        : {
+            ...prev,
+            currentUser: nextUser,
+            users: nextUsers
+          };
+    });
+  }, [authUser, isAuthEnabled]);
 
   useEffect(() => {
     if (!isSharedWorkspaceEnabled || !workspaceDocRef) return undefined;

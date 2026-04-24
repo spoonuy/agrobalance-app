@@ -16,7 +16,7 @@ export default function Companies() {
   const [editingCompany, setEditingCompany] = useState(null);
 
   const submitCompany = (form) => {
-    const payload = { ...form, userId: state.currentUser.id };
+    const payload = { ...form, userId: state.currentUser?.id || 'unknown-user' };
 
     if (editingCompany) {
       updateItem('companies', editingCompany.id, payload);

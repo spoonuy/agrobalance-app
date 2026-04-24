@@ -119,7 +119,7 @@ export default function Layout({ children, onLogout }) {
               ))}
             </select>
             <div className="user-controls">
-              <div className="user-pill">{state.currentUser.nombre}</div>
+              <div className="user-pill">{state.currentUser?.nombre || state.currentUser?.email || 'Usuario'}</div>
               <button type="button" className="ghost-button small" onClick={onLogout}>Cerrar sesión</button>
             </div>
           </div>

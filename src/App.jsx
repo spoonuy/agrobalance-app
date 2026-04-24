@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
+import { useAuth } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
 import Companies from './pages/Companies';
 import Fields from './pages/Fields';
@@ -18,37 +19,100 @@ import Machinery from './pages/Machinery';
 import Personnel from './pages/Personnel';
 import Admin from './pages/Admin';
 
-const INTRO_STORAGE_KEY = 'agrobalance-intro-entered-v2';
+function AuthScreen() {
+  const { signIn, isAuthEnabled } = useAuth();
+  const [form, setForm] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-function IntroScreen({ onEnter }) {
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+
+    try {
+      setSubmitting(true);
+      await signIn(form.email.trim(), form.password);
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="intro-screen">
       <div className="intro-backdrop" />
-      <div className="intro-panel">
+      <div className="intro-panel auth-panel">
         <img className="intro-logo" src="/logo.png" alt="AgroBalance" />
-        <button type="button" className="primary-button intro-enter-button" onClick={onEnter}>
-          Ingresar
-        </button>
+        <div className="auth-copy">
+          <h1>Iniciar sesión</h1>
+          <p>
+            {isAuthEnabled
+              ? 'Accede con Firebase para usar AgroBalance con sesión real.'
+              : 'Firebase Auth no está configurado todavía en este entorno.'}
+          </p>
+        </div>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" value={form.email} onChange={handleChange} required />
+          </label>
+
+          <label>
+            <span>Contraseña</span>
+            <input type="password" name="password" value={form.password} onChange={handleChange} required />
+          </label>
+
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          <button type="submit" className="primary-button intro-enter-button" disabled={submitting || !isAuthEnabled}>
+            {submitting ? 'Procesando...' : 'Ingresar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div className="intro-screen">
+      <div className="intro-backdrop" />
+      <div className="intro-panel auth-panel">
+        <img className="intro-logo" src="/logo.png" alt="AgroBalance" />
+        <div className="auth-copy">
+          <h1>Verificando sesión</h1>
+          <p>Espera un momento mientras validamos tu acceso.</p>
+        </div>
       </div>
     </div>
   );
 }
 
 export default function App() {
-  const [hasEntered, setHasEntered] = useState(() => localStorage.getItem(INTRO_STORAGE_KEY) === 'true');
+  const { authUser, authLoading, isAuthEnabled, signOutUser } = useAuth();
 
-  useEffect(() => {
-    localStorage.setItem(INTRO_STORAGE_KEY, hasEntered ? 'true' : 'false');
-  }, [hasEntered]);
+  if (isAuthEnabled && authLoading) {
+    return <LoadingScreen />;
+  }
 
-  if (!hasEntered) {
-    return <IntroScreen onEnter={() => setHasEntered(true)} />;
+  if (isAuthEnabled && !authUser) {
+    return <AuthScreen />;
   }
 
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <Layout onLogout={() => setHasEntered(false)}>
+        <Layout onLogout={signOutUser}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/companies" element={<Companies />} />
