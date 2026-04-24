@@ -104,6 +104,13 @@ button { cursor: pointer; }
   font-weight: 700;
   text-align: center;
 }
+.auth-message {
+  margin: 0;
+  color: #d8ffe2;
+  font-weight: 700;
+  text-align: center;
+}
+.auth-link,
 .auth-switch {
   border: none;
   background: transparent;

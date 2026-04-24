@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile
@@ -75,6 +76,14 @@ export function AuthProvider({ children }) {
     async signOutUser() {
       if (!auth) return;
       await signOut(auth);
+    },
+    async resetPassword(email) {
+      if (!auth) throw new Error('Firebase Auth no está configurado.');
+      try {
+        await sendPasswordResetEmail(auth, email);
+      } catch (error) {
+        throw new Error(mapAuthError(error));
+      }
     }
   }), [authLoading, authUser, isAuthEnabled]);
 

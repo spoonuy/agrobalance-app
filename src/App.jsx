@@ -20,12 +20,13 @@ import Personnel from './pages/Personnel';
 import Admin from './pages/Admin';
 
 function AuthScreen() {
-  const { signIn, isAuthEnabled } = useAuth();
+  const { signIn, resetPassword, isAuthEnabled } = useAuth();
   const [form, setForm] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (event) => {
@@ -36,12 +37,33 @@ function AuthScreen() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    setMessage('');
 
     try {
       setSubmitting(true);
       await signIn(form.email.trim(), form.password);
     } catch (submitError) {
       setError(submitError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setError('');
+    setMessage('');
+
+    if (!form.email.trim()) {
+      setError('Escribe tu email primero para enviar el restablecimiento.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await resetPassword(form.email.trim());
+      setMessage('Te enviamos un correo para restablecer la contraseña.');
+    } catch (resetError) {
+      setError(resetError.message);
     } finally {
       setSubmitting(false);
     }
@@ -73,9 +95,14 @@ function AuthScreen() {
           </label>
 
           {error ? <p className="auth-error">{error}</p> : null}
+          {message ? <p className="auth-message">{message}</p> : null}
 
           <button type="submit" className="primary-button intro-enter-button" disabled={submitting || !isAuthEnabled}>
             {submitting ? 'Procesando...' : 'Ingresar'}
+          </button>
+
+          <button type="button" className="auth-link" onClick={handleResetPassword} disabled={submitting || !isAuthEnabled}>
+            Olvidé mi contraseña
           </button>
         </form>
       </div>
