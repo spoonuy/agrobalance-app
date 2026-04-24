@@ -127,10 +127,10 @@ const relationChecks = {
 };
 
 export function AppProvider({ children }) {
-  const { authUser, isAuthEnabled } = useAuth();
+  const { authUser, authLoading, isAuthEnabled } = useAuth();
   const [state, setState] = useState(loadData);
   const lastRemoteSnapshot = useRef(null);
-  const remoteReady = useRef(!isSharedWorkspaceEnabled);
+  const remoteReady = useRef(!isSharedWorkspaceEnabled && !isAuthEnabled);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -170,6 +170,11 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     if (!isSharedWorkspaceEnabled || !workspaceDocRef) return undefined;
+    if (isAuthEnabled && authLoading) return undefined;
+    if (isAuthEnabled && !authUser) {
+      remoteReady.current = false;
+      return undefined;
+    }
 
     const unsubscribe = onSnapshot(workspaceDocRef, async (snapshot) => {
       if (!snapshot.exists()) {
@@ -193,14 +198,15 @@ export function AppProvider({ children }) {
       setState((current) => (serializeState(current) === serialized ? current : remoteState));
     }, (error) => {
       console.error('No se pudo sincronizar con Firestore', error);
-      remoteReady.current = true;
+      remoteReady.current = false;
     });
 
     return unsubscribe;
-  }, []);
+  }, [authLoading, authUser, isAuthEnabled]);
 
   useEffect(() => {
     if (!isSharedWorkspaceEnabled || !workspaceDocRef || !remoteReady.current) return;
+    if (isAuthEnabled && (authLoading || !authUser)) return;
 
     const serialized = serializeState(state);
     if (serialized === lastRemoteSnapshot.current) return;
@@ -212,8 +218,9 @@ export function AppProvider({ children }) {
       updatedAt: serverTimestamp()
     }, { merge: true }).catch((error) => {
       console.error('No se pudo guardar el workspace compartido', error);
+      remoteReady.current = false;
     });
-  }, [state]);
+  }, [authLoading, authUser, isAuthEnabled, state]);
 
   useEffect(() => {
     const validActiveCompany = state.companies.some((company) => company.id === state.activeCompanyId);
