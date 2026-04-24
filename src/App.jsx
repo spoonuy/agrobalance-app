@@ -76,11 +76,7 @@ function AuthScreen() {
         <img className="intro-logo" src="/logo.png" alt="AgroBalance" />
         <div className="auth-copy">
           <h1>Iniciar sesión</h1>
-          <p>
-            {isAuthEnabled
-              ? 'Accede con Firebase para usar AgroBalance con sesión real.'
-              : 'Firebase Auth no está configurado todavía en este entorno.'}
-          </p>
+          <p>{isAuthEnabled ? 'Ingresa con tu email y contraseña para acceder a AgroBalance.' : 'Firebase Auth no está configurado todavía en este entorno.'}</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
